@@ -1,5 +1,6 @@
 *.r
 notes.txt
+*.csv
 
 # General
 .DS_Store
