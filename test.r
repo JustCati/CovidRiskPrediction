@@ -1,8 +1,8 @@
 library(arrow)
 library(caret)
-library(RWeka)
 library(rpart)
 library(rpart.plot)
+library(randomForest)
 
 clean <- function() {
         rm(list = ls())
@@ -137,24 +137,12 @@ print(metrics)
 #! ----------------------------------------------------------
 
 if (TRUE) {
-#! -------------- DECISION TREE C4.5 ------------------------
+#! -------------- RANDOM FOREST ------------------------
 
-c4.5 <- PART(AT_RISK ~ ., data = trainingSet)
+rf <- randomForest(AT_RISK ~ ., data = trainingSet)
+plot(rf)
 
-predicted <- predict(c4.5Pruned, testSet_Data)
-
-View(head(predicted, 500))
-stop()
-
-metrics <- getMetrics(results)
-
-print("Metrics C4.5")
-print(metrics)
 }
 #! ----------------------------------------------------------
-
-
-
-
 
 clean()
