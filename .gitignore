@@ -1,4 +1,5 @@
 *.r
+!test.r
 notes.txt
 *.csv
 
