@@ -1,8 +1,5 @@
 library(arrow)
 library(caret)
-library(rpart)
-library(rpart.plot)
-library(randomForest)
 
 clean <- function() {
         rm(list = ls())
@@ -60,7 +57,8 @@ getMetrics <- function(results) {
         return(c(accuracy, precision, recall, f1))
 }
 #! ------------------------------------------------------------------------
-# #! -------------- CALCULATE METRICS WITH MATRIX ------------------------
+
+{#! -------------- CALCULATE METRICS WITH MATRIX ------------------------
 # getConfusionMatrix <- function(results) {
 #         confusionMatrix <- matrix(0, nrow = 2, ncol = 2)
 #         results$predicted <- as.logical(results$predicted)
@@ -97,7 +95,7 @@ getMetrics <- function(results) {
 #         f1 <- getF1(confusion)
 #         return(c(accuracy, precision, recall, f1))
 # }
-# #! ---------------------------------------------------------------------
+} #! ---------------------------------------------------------------------
 
 covid <- data.frame(read_parquet("covidClean.parquet"))
 
@@ -107,7 +105,15 @@ covid[, c("PATIENT_ID", "USMER", "MEDICAL_UNIT", "PATIENT_TYPE",
 covid[, c("DIED", "ICU", "INTUBED")] <- NULL
 
 
+for (col in colnames(covid)){
+        if (is.logical(covid[, col])) {
+                covid[, col] <- as.factor(covid[, col])
+        }
+}
+
+
 #! -------------- TRAINING AND TEST SET ------------------------
+
 indexis <- createDataPartition(covid$AT_RISK, p = 0.75, list = FALSE)
 
 trainingSet <- covid[indexis, ]
@@ -115,18 +121,20 @@ testSet <- covid[-indexis, ]
 
 testSet_True <- testSet[, "AT_RISK"]
 testSet_Data <- testSet[, - which(colnames(trainingSet) == "AT_RISK")]
+
+cntrl <- trainControl(method = "cv", number = 5, sampling = "down", verboseIter = TRUE)
+
 #! ----------------------------------------------------------
 
 
-if (FALSE) {
+if (0) {
 #! -------------- DECISION TREE CART ------------------------
 
-cart <- rpart(AT_RISK ~ ., data = trainingSet, method = "class")
-cp <- cart$cptable[which.min(cart$cptable[, "xerror"]), "CP"]
-cartPruned <- prune(cart, cp = cp)
+cart <- train(trainingSet[, 1:ncol(trainingSet)-1],
+        trainingSet$AT_RISK, method = "rpart", trControl = cntrl)
 
-predicted <- predict(cartPruned, testSet_Data, type = "class")
-results <- data.frame(labels = testSet_True, predicted = predictedCart)
+predicted <- predict(cart, testSet_Data)
+results <- data.frame(labels = testSet_True, predicted = predicted)
 
 metrics <- getMetrics(results)
 
@@ -136,11 +144,39 @@ print(metrics)
 }
 #! ----------------------------------------------------------
 
-if (TRUE) {
+if (0) {
+#! -------------- DECISION TREE C4.5 ------------------------
+
+c4.5 <- train(trainingSet[, 1:ncol(trainingSet)-1],
+        trainingSet$AT_RISK, method = "J48", trControl = cntrl)
+
+predicted <- predict(c4.5, testSet_Data)
+results <- data.frame(labels = testSet_True, predicted = predicted)
+
+metrics <- getMetrics(results)
+
+print("Metrics C4.5")
+print(metrics)
+
+}
+#! ----------------------------------------------------------
+
+
+if (1) {
 #! -------------- RANDOM FOREST ------------------------
 
-rf <- randomForest(AT_RISK ~ ., data = trainingSet)
-plot(rf)
+rf <- train(trainingSet[, 1:ncol(trainingSet)-1],
+        trainingSet$AT_RISK, method = "parRF", trControl = cntrl)
+
+plot.train(rf)
+
+predicted <- predict(rf, testSet_Data)
+results <- data.frame(labels = testSet_True, predicted = predicted)
+
+metrics <- getMetrics(results)
+
+print("Metrics Random Forest")
+print(metrics)
 
 }
 #! ----------------------------------------------------------
