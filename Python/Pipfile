@@ -15,6 +15,7 @@ ipykernel = "*"
 ipy = "*"
 pandoc = "*"
 nbconvert = "*"
+joblib = "*"
 
 [dev-packages]
 

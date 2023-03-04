@@ -2,8 +2,8 @@
 notes.txt
 *.csv
 *.py
-!test.r
-!test.py
+!test*.r
+!test*.py
 
 # General
 .DS_Store

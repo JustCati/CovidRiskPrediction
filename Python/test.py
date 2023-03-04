@@ -1,17 +1,20 @@
+import numpy as np
 import pandas as pd
-from sklearn.tree._tree import TREE_LEAF
+import matplotlib.pyplot as plt
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
+from sklearn.model_selection import train_test_split, cross_val_score
 
 #! ------ CALCULATE METRICS -------
 
-def getConfusionMatrix(labels, predictions):
+def getConfusionMatrix(labels: np.ndarray, predictions: np.ndarray):
     confusion = dict()
-    confusion["TP"] = sum(labels & predictions)
-    confusion["TN"] = sum(~labels & ~predictions)
-    confusion["FP"] = sum(~labels & predictions)
-    confusion["FN"] = sum(labels & ~predictions)
+    confusion["TP"] = np.sum(labels & predictions)
+    confusion["TN"] = np.sum(~labels & ~predictions)
+    confusion["FP"] = np.sum(~labels & predictions)
+    confusion["FN"] = np.sum(labels & ~predictions)
     return confusion
 
 def getMetrics(confusion):
@@ -33,52 +36,81 @@ covid = covid.drop(columns= ["DIED", "INTUBED", "ICU"])
 
 trainingSet, testSet = train_test_split(covid, test_size = 0.25)
 
-trainingY = trainingSet["AT_RISK"]
+trainingY = np.array(trainingSet["AT_RISK"])
 trainingX = trainingSet.drop(columns = ["AT_RISK"])
 
-testY = testSet["AT_RISK"]
+testY = np.array(testSet["AT_RISK"])
 testX = testSet.drop(columns = ["AT_RISK"])
 
+if 0:
 #! ------------- CART ---------------- 
 
-
-def prune_index(inner_tree, index, threshold):
-    if inner_tree.value[index].min() < threshold:
-        inner_tree.children_left[index] = TREE_LEAF
-        inner_tree.children_right[index] = TREE_LEAF
-    if inner_tree.children_left[index] != TREE_LEAF:
-        prune_index(inner_tree, inner_tree.children_left[index], threshold)
-        prune_index(inner_tree, inner_tree.children_right[index], threshold)
-
-cart = DecisionTreeClassifier()
-
-prune_index(cart.tree_, 0, 0.1)
-
-cart.fit(trainingX, trainingY)
-predictions = cart.predict(testX)
-
-metric = getMetrics(getConfusionMatrix(testY, predictions))
-print("CART metrics:")
-print("Accuracy: \t", metric["accuracy"])
-print("Precision: \t", metric["precision"])
-print("Recall: \t", metric["recall"])
-print("F1: \t\t", metric["f1"])
-
+#? ------------- CART FILE -----------
+    pass
+    
 #! -----------------------------------
 
 
+if 0:
 #! ------------- RF ------------------
 
-# rf = RandomForestClassifier(n_estimators=2000, n_jobs=-1)
+    rf = RandomForestClassifier(n_estimators=1000, n_jobs=-1)
 
-# rf.fit(trainingX, trainingY)
-# predictions = rf.predict(testX)
+    rf.fit(trainingX, trainingY)
+    predictions = rf.predict(testX)
 
-# metric = getMetrics(getConfusionMatrix(testY, predictions))
-# print("\nRF metrics:")
-# print("Accuracy: \t", metric["accuracy"])
-# print("Precision: \t", metric["precision"])
-# print("Recall: \t", metric["recall"])
-# print("F1: \t\t", metric["f1"])
+    metric = getMetrics(getConfusionMatrix(testY, predictions))
+    print("\nRF metrics:")
+    print("Accuracy: \t", metric["accuracy"])
+    print("Precision: \t", metric["precision"])
+    print("Recall: \t", metric["recall"])
+    print("F1: \t\t", metric["f1"])
 
 #! -----------------------------------
+
+
+if 0:
+#! ------------- NAIVE BAYES GAUSSIAN ------------------
+
+    nb = GaussianNB()
+    
+    nb.fit(trainingX, trainingY)
+    predictions = nb.predict(testX)
+    
+    metric = getMetrics(getConfusionMatrix(testY, predictions))
+
+    print("\nNB Gaussian metrics:")
+    print("Accuracy: \t", metric["accuracy"])
+    print("Precision: \t", metric["precision"])
+    print("Recall: \t", metric["recall"])
+    print("F1: \t\t", metric["f1"])
+
+#! -----------------------------------
+
+if 0:
+#! ------------- NAIVE BAYES MULTINOMIAL ------------------
+
+    nb = MultinomialNB()
+    
+    nb.fit(trainingX, trainingY)
+    predictions = nb.predict(testX)
+
+    metric = getMetrics(getConfusionMatrix(testY, predictions))
+
+    print("\nNB Multinomial metrics:")
+    print("Accuracy: \t", metric["accuracy"])
+    print("Precision: \t", metric["precision"])
+    print("Recall: \t", metric["recall"])
+    print("F1: \t\t", metric["f1"])
+
+#! -----------------------------------
+
+
+if 0:
+#! ------------- KNN ------------------
+
+#? ------------- KNN FILE -----------
+    pass
+
+#! -----------------------------------
+
