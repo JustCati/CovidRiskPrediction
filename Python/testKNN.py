@@ -1,11 +1,8 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import GaussianNB, MultinomialNB
-from sklearn.model_selection import train_test_split, cross_val_score
+import math
+
+import cudf as cu
+from cuml.neighbors import KNeighborsClassifier
+from cuml.model_selection import train_test_split as cuTrainTestSplit
 
 #! ------ CALCULATE METRICS -------
 
@@ -24,53 +21,77 @@ def getMetrics(confusion):
     metrics["recall"] = confusion["TP"] / (confusion["TP"] + confusion["FN"])
     metrics["f1"] = 2 * (metrics["precision"] * metrics["recall"]) / (metrics["precision"] + metrics["recall"])
     return metrics
+
+def printMetrics(confusion):
+    print("Accuracy: \t", confusion["accuracy"])
+    print("Precision: \t", confusion["precision"])
+    print("Recall: \t", confusion["recall"])
+    print("F1: \t\t", confusion["f1"])
 #! ---------------------------------
 
-covid = pd.read_parquet('covidClean.parquet')
+cuCovid = cu.read_parquet('covidClean.parquet')
 
 toRemove = ["PATIENT_ID", "USMER", "SYMPTOMS_DATE",
-            "MEDICAL_UNIT", "ADMISSION_DATE", "PATIENT_TYPE",
-            "DEATH_DATE", "ORIGIN_COUNTRY"]
-covid = covid.drop(columns = toRemove)
-covid = covid.drop(columns= ["DIED", "INTUBED", "ICU"])
+        "MEDICAL_UNIT", "ADMISSION_DATE", "PATIENT_TYPE",
+        "DEATH_DATE", "ORIGIN_COUNTRY"]
+cuCovid = cuCovid.drop(columns = toRemove)
+cuCovid = cuCovid.drop(columns= ["DIED", "INTUBED", "ICU"])
+cuCovid = cuCovid.astype("float32")
 
-trainingSet, testSet = train_test_split(covid, test_size = 0.25)
+labels = cuCovid["AT_RISK"]
+covidX = cuCovid.drop(columns = ["AT_RISK"])
+cuTrainingX, cuTestX, cuTrainingY, cuTestY = cuTrainTestSplit(covidX, labels, test_size=0.25)
 
-trainingY = trainingSet["AT_RISK"]
-trainingX = trainingSet.drop(columns = ["AT_RISK"])
+cuTestY = cuTestY.to_pandas().to_numpy().astype("bool")
 
-testY = testSet["AT_RISK"]
-testX = testSet.drop(columns = ["AT_RISK"])
+
 
 
 #! ------------- KNN ------------------
 
-k_values = range(150, 1000, 5)
-results = []
+def findBestK(lower, upper, metric="accuracy"):
+    median = (lower + upper) // 2
+    if lower == median:
+        return lower
+    
+    results = dict()
+    for k in [lower, median, upper]:
+        knn = KNeighborsClassifier(n_neighbors=k)
+        knn.fit(cuTrainingX, cuTrainingY)
+        predicted = knn.predict(cuTestX)
+        
+        predicted = predicted.to_pandas().to_numpy().astype("bool")
 
-for k in k_values:
-    knn = KNeighborsClassifier(n_neighbors=k, n_jobs=-1)
-    knn.fit(trainingX, trainingY)
-    predicted = knn.predict(testX)
-    results.append(getMetrics(getConfusionMatrix(testY, predicted))["accuracy"])
+        results[k] = getMetrics(getConfusionMatrix(cuTestY, predicted))[metric]
+        print("K: ", k, metric, ": ", results[k])
 
-plt.figure(figsize=(10, 5))
-plt.plot(k_values, results)
-plt.xlabel("k")
-plt.ylabel("accuracy")
-plt.show()
-exit()
+    if results[median] > results[lower]:
+        return findBestK(median, upper, metric)
+    else:
+        return findBestK(lower, median, metric)
 
-knn.fit(trainingX, trainingY)
-predictions = knn.predict(testX)
+bestK = findBestK(1, 1000, "accuracy")
+print("Best K: ", bestK)
 
-metric = getMetrics(getConfusionMatrix(testY, predictions))
+knn = KNeighborsClassifier(n_neighbors=827)
+knn.fit(cuTrainingX, cuTrainingY)
+predicted = knn.predict(cuTestX)
+predicted = predicted.to_pandas().to_numpy().astype("bool")
 
-print("\nKNN metrics:")
-print("Accuracy: \t", metric["accuracy"])
-print("Precision: \t", metric["precision"])
-print("Recall: \t", metric["recall"])
-print("F1: \t\t", metric["f1"])
+print("\nKNN Metrics:")
+printMetrics(getMetrics(getConfusionMatrix(cuTestY, predicted)))
+
+
+
+#! KNN CON K = SQRT(N) (N = Numero di sample)
+knnSQRT = KNeighborsClassifier(n_neighbors=int(math.sqrt(len(cuTrainingX))))
+knnSQRT.fit(cuTrainingX, cuTrainingY)
+
+predicted = knnSQRT.predict(cuTestX)
+
+predicted = predicted.to_pandas().to_numpy().astype("bool")
+
+print("\nKNN SQRT Metrics:")
+printMetrics(getMetrics(getConfusionMatrix(cuTestY, predicted)))
 
 #! -----------------------------------
-
