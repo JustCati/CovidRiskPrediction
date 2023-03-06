@@ -7,13 +7,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 
 
-import cudf as cu
-from cuml.svm import SVC as cuSVC, LinearSVC as cuLinearSVC
-from cuml.model_selection import train_test_split as cuTrainTestSplit
-from cuml import RandomForestClassifier as cuRandomForestClassifier
+# import cudf as cu
+# from cuml.svm import SVC as cuSVC, LinearSVC as cuLinearSVC
+# from cuml.model_selection import train_test_split as cuTrainTestSplit
+# from cuml import RandomForestClassifier as cuRandomForestClassifier
 
 
-#! ------ CALCULATE METRICS -------
+# #! ------ CALCULATE METRICS -------
 def getConfusionMatrix(labels: np.ndarray, predictions: np.ndarray):
     confusion = dict()
     confusion["TP"] = np.sum(labels & predictions)
@@ -35,9 +35,9 @@ def printMetrics(confusion):
     print("Precision: \t", confusion["precision"])
     print("Recall: \t", confusion["recall"])
     print("F1: \t\t", confusion["f1"])
-#! ---------------------------------
+# #! ---------------------------------
 
-#! ----------- CPU ---------------------
+# #! ----------- CPU ---------------------
 
 covid = pd.read_parquet('covidClean.parquet')
 
@@ -56,154 +56,154 @@ testY = np.array(testSet["AT_RISK"])
 testX = testSet.drop(columns = ["AT_RISK"])
 
 
-#! ------------- GPU ------------------
+# #! ------------- GPU ------------------
 
-cuCovid = cu.read_parquet('covidClean.parquet')
+# cuCovid = cu.read_parquet('covidClean.parquet')
 
-toRemove = ["PATIENT_ID", "USMER", "SYMPTOMS_DATE",
-        "MEDICAL_UNIT", "ADMISSION_DATE", "PATIENT_TYPE",
-        "DEATH_DATE", "ORIGIN_COUNTRY"]
-cuCovid = cuCovid.drop(columns = toRemove)
-cuCovid = cuCovid.drop(columns= ["DIED", "INTUBED", "ICU"])
-cuCovid = cuCovid.astype("float32")
+# toRemove = ["PATIENT_ID", "USMER", "SYMPTOMS_DATE",
+#         "MEDICAL_UNIT", "ADMISSION_DATE", "PATIENT_TYPE",
+#         "DEATH_DATE", "ORIGIN_COUNTRY"]
+# cuCovid = cuCovid.drop(columns = toRemove)
+# cuCovid = cuCovid.drop(columns= ["DIED", "INTUBED", "ICU"])
+# cuCovid = cuCovid.astype("float32")
 
-labels = cuCovid["AT_RISK"]
-covidX = cuCovid.drop(columns = ["AT_RISK"])
-cuTrainingX, cuTestX, cuTrainingY, cuTestY = cuTrainTestSplit(covidX, labels, test_size=0.25)
+# labels = cuCovid["AT_RISK"]
+# covidX = cuCovid.drop(columns = ["AT_RISK"])
+# cuTrainingX, cuTestX, cuTrainingY, cuTestY = cuTrainTestSplit(covidX, labels, test_size=0.25)
 
-cuTestY = cuTestY.to_pandas().to_numpy().astype("bool")
-cuTrainY = cuTrainingY.to_pandas().to_numpy().astype("bool")
+# cuTestY = cuTestY.to_pandas().to_numpy().astype("bool")
+# cuTrainY = cuTrainingY.to_pandas().to_numpy().astype("bool")
 
-#! -----------------------------------
+# #! -----------------------------------
 
 
-if 0:
-#! ------------- CART ---------------- 
+# if 0:
+# #! ------------- CART ---------------- 
 
-#? ------------- CART FILE -----------
-    pass
+# #? ------------- CART FILE -----------
+#     pass
     
-#! -----------------------------------
+# #! -----------------------------------
 
-if 0:
-#! ------------- RF GPU -----------------
-    rf = cuRandomForestClassifier(n_estimators=1000)
-    rf.fit(cuTrainingX, cuTrainingY)
+# if 0:
+# #! ------------- RF GPU -----------------
+#     rf = cuRandomForestClassifier(n_estimators=1000)
+#     rf.fit(cuTrainingX, cuTrainingY)
     
-    predictionsTrain = rf.predict(cuTrainingX)
-    predictionsTest = rf.predict(cuTestX)
+#     predictionsTrain = rf.predict(cuTrainingX)
+#     predictionsTest = rf.predict(cuTestX)
 
-    predictionsTrain = predictionsTrain.to_pandas().to_numpy().astype("bool")
-    predictionsTest = predictionsTest.to_pandas().to_numpy().astype("bool")
+#     predictionsTrain = predictionsTrain.to_pandas().to_numpy().astype("bool")
+#     predictionsTest = predictionsTest.to_pandas().to_numpy().astype("bool")
 
-    metricsTest = getMetrics(getConfusionMatrix(cuTestY, predictionsTest))
-    metricsTrain = getMetrics(getConfusionMatrix(cuTrainY, predictionsTrain))
+#     metricsTest = getMetrics(getConfusionMatrix(cuTestY, predictionsTest))
+#     metricsTrain = getMetrics(getConfusionMatrix(cuTrainY, predictionsTrain))
     
-    print("\nRF metrics (GPU) on Training Set:")
-    printMetrics(metricsTrain)
-    print("\nRF metrics (GPU) on Test Set:")
-    printMetrics(metricsTest)
+#     print("\nRF metrics (GPU) on Training Set:")
+#     printMetrics(metricsTrain)
+#     print("\nRF metrics (GPU) on Test Set:")
+#     printMetrics(metricsTest)
     
-#! -----------------------------------
+# #! -----------------------------------
 
 
-if 0:
-#! ------------- NAIVE BAYES GAUSSIAN ------------------
+# if 0:
+# #! ------------- NAIVE BAYES GAUSSIAN ------------------
 
-    nb = GaussianNB()
-    nb.fit(trainingX, trainingY)
+#     nb = GaussianNB()
+#     nb.fit(trainingX, trainingY)
     
-    predictionsTrain = nb.predict(trainingX)
-    predictionTest = nb.predict(testX)
+#     predictionsTrain = nb.predict(trainingX)
+#     predictionTest = nb.predict(testX)
     
-    metricsTest = getMetrics(getConfusionMatrix(testY, predictionTest))
-    metricsTraing = getMetrics(getConfusionMatrix(trainingY, predictionsTrain))
+#     metricsTest = getMetrics(getConfusionMatrix(testY, predictionTest))
+#     metricsTraing = getMetrics(getConfusionMatrix(trainingY, predictionsTrain))
 
-    print("\nNB Gaussian metrics on Training Set:")
-    printMetrics(metricsTraing)
-    print("\nNB Gaussian metrics on Test Set:")
-    printMetrics(metricsTest)
+#     print("\nNB Gaussian metrics on Training Set:")
+#     printMetrics(metricsTraing)
+#     print("\nNB Gaussian metrics on Test Set:")
+#     printMetrics(metricsTest)
 
-#! -----------------------------------
+# #! -----------------------------------
 
-if 0:
-#! ------------- NAIVE BAYES MULTINOMIAL ------------------
+# if 0:
+# #! ------------- NAIVE BAYES MULTINOMIAL ------------------
 
-    nb = MultinomialNB()
-    nb.fit(trainingX, trainingY)
+#     nb = MultinomialNB()
+#     nb.fit(trainingX, trainingY)
     
-    predictionsTrain = nb.predict(trainingX)
-    predictionTest = nb.predict(testX)
+#     predictionsTrain = nb.predict(trainingX)
+#     predictionTest = nb.predict(testX)
     
-    metricsTest = getMetrics(getConfusionMatrix(testY, predictionTest))
-    metricsTraing = getMetrics(getConfusionMatrix(trainingY, predictionsTrain))
+#     metricsTest = getMetrics(getConfusionMatrix(testY, predictionTest))
+#     metricsTraing = getMetrics(getConfusionMatrix(trainingY, predictionsTrain))
 
-    print("\nNB Multinomial metrics on Training Set:")
-    printMetrics(metricsTraing)
-    print("\nNB Multinomial metrics on Test Set:")
-    printMetrics(metricsTest)
+#     print("\nNB Multinomial metrics on Training Set:")
+#     printMetrics(metricsTraing)
+#     print("\nNB Multinomial metrics on Test Set:")
+#     printMetrics(metricsTest)
 
-#! -----------------------------------
-
-
-if 0:
-#! ------------- KNN ------------------
-
-#? ------------- KNN FILE -----------
-    pass
-
-#! -----------------------------------
+# #! -----------------------------------
 
 
-if 0:
-#! ------------- LINEAR SVM ------------------
+# if 0:
+# #! ------------- KNN ------------------
 
-    svm = cuLinearSVC(max_iter=100000)
-    svm.fit(cuTrainingX, cuTrainingY)
+# #? ------------- KNN FILE -----------
+#     pass
+
+# #! -----------------------------------
+
+
+# if 0:
+# #! ------------- LINEAR SVM ------------------
+
+#     svm = cuLinearSVC(max_iter=100000)
+#     svm.fit(cuTrainingX, cuTrainingY)
     
-    predictionsTrain = svm.predict(cuTrainingX)
-    predictionsTest = svm.predict(cuTestX)
+#     predictionsTrain = svm.predict(cuTrainingX)
+#     predictionsTest = svm.predict(cuTestX)
     
-    predictionsTrain = predictionsTrain.to_pandas().to_numpy().astype("bool")
-    predictionsTest = predictionsTest.to_pandas().to_numpy().astype("bool")
+#     predictionsTrain = predictionsTrain.to_pandas().to_numpy().astype("bool")
+#     predictionsTest = predictionsTest.to_pandas().to_numpy().astype("bool")
 
-    metricsTrain = getMetrics(getConfusionMatrix(cuTrainY, predictionsTrain))
-    metricsTest = getMetrics(getConfusionMatrix(cuTestY, predictionsTest))
+#     metricsTrain = getMetrics(getConfusionMatrix(cuTrainY, predictionsTrain))
+#     metricsTest = getMetrics(getConfusionMatrix(cuTestY, predictionsTest))
 
-    print("\nLinear SVM metrics (GPU) on Training Set:")
-    printMetrics(metricsTrain)
-    print("\nLinear SVM metrics (GPU) on Test Set:")
-    printMetrics(metricsTest)
+#     print("\nLinear SVM metrics (GPU) on Training Set:")
+#     printMetrics(metricsTrain)
+#     print("\nLinear SVM metrics (GPU) on Test Set:")
+#     printMetrics(metricsTest)
 
-#! -----------------------------------
+# #! -----------------------------------
 
-if 0:
-#! ------------- SVM ------------------
+# if 0:
+# #! ------------- SVM ------------------
 
-    results = dict()
-    kernels = ["poly", "rbf", "sigmoid"]
+#     results = dict()
+#     kernels = ["poly", "rbf", "sigmoid"]
 
-    for kernel in kernels:
-        svm = cuSVC(kernel=kernel, max_iter=100000)
-        svm.fit(cuTrainingX, cuTrainingY)
+#     for kernel in kernels:
+#         svm = cuSVC(kernel=kernel, max_iter=100000)
+#         svm.fit(cuTrainingX, cuTrainingY)
     
-        predictionsTrain = svm.predict(cuTrainingX)
-        predictionsTest = svm.predict(cuTestX)
+#         predictionsTrain = svm.predict(cuTrainingX)
+#         predictionsTest = svm.predict(cuTestX)
         
-        predictionsTrain = predictionsTrain.to_pandas().to_numpy().astype("bool")
-        predictionsTest = predictionsTest.to_pandas().to_numpy().astype("bool")
+#         predictionsTrain = predictionsTrain.to_pandas().to_numpy().astype("bool")
+#         predictionsTest = predictionsTest.to_pandas().to_numpy().astype("bool")
 
-        metricsTrain = getMetrics(getConfusionMatrix(cuTrainY, predictionsTrain))
-        metricsTest = getMetrics(getConfusionMatrix(cuTestY, predictionsTest))
+#         metricsTrain = getMetrics(getConfusionMatrix(cuTrainY, predictionsTrain))
+#         metricsTest = getMetrics(getConfusionMatrix(cuTestY, predictionsTest))
         
-        print("\n SVM con kernel '" + kernel + "' metrics on Training Set: ")
-        printMetrics(metricsTrain)
-        print("\n SVM con kernel '" + kernel + "' metrics on Test Set: ")
-        printMetrics(metricsTest)
+#         print("\n SVM con kernel '" + kernel + "' metrics on Training Set: ")
+#         printMetrics(metricsTrain)
+#         print("\n SVM con kernel '" + kernel + "' metrics on Test Set: ")
+#         printMetrics(metricsTest)
 
-#! -----------------------------------
+# #! -----------------------------------
 
-if 1:
+if 0:
 #! ------------- LOGISTIC REGRESSION ------------------
     
     totalMetrics = dict()
@@ -225,11 +225,5 @@ if 1:
         printMetrics(metricsTrain)
         print("\nLogistic Regression metrics (solver = \"" + solver + "\") on Test Set:")
         printMetrics(metricsTest)
-        
-    matplotlib.use("GTK3Agg")
-    plt.plot(solvers, [totalMetrics[solver][0]["accuracy"] for solver in solvers], label="Training Set", marker="o")
-    plt.show()
-
     
 #! ------------------------------------------------
-
