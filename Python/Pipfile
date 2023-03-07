@@ -16,6 +16,9 @@ ipy = "*"
 pandoc = "*"
 nbconvert = "*"
 joblib = "*"
+torch = "*"
+torchvision = "*"
+torchaudio = "*"
 
 [dev-packages]
 
