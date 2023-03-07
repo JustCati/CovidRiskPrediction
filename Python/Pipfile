@@ -19,6 +19,8 @@ joblib = "*"
 torch = "*"
 torchvision = "*"
 torchaudio = "*"
+seaborn = "*"
+scikit-survival = "*"
 
 [dev-packages]
 
