@@ -21,6 +21,13 @@ torchvision = "*"
 torchaudio = "*"
 seaborn = "*"
 scikit-survival = "*"
+imbalanced-learn = "*"
+rpy2 = "*"
+scipy = "*"
+xgboost = "*"
+lifelines = "*"
+weightedstats = "*"
+sklearn-json = "*"
 
 [dev-packages]
 
