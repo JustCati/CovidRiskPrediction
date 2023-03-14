@@ -15,8 +15,21 @@ ipykernel = "*"
 ipy = "*"
 pandoc = "*"
 nbconvert = "*"
+joblib = "*"
+torch = "*"
+torchvision = "*"
+torchaudio = "*"
+seaborn = "*"
+scikit-survival = "*"
+imbalanced-learn = "*"
+rpy2 = "*"
+scipy = "*"
+xgboost = "*"
+lifelines = "*"
+weightedstats = "*"
+sklearn-json = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.11"
+python_version = "3.10"
