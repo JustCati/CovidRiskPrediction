@@ -2,8 +2,6 @@
 notes.txt
 *.csv
 *.py
-!test*.r
-!test*.py
 *.json
 
 # General
