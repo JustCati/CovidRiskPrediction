@@ -1,0 +1,35 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+scikit-learn = "*"
+pandas = "*"
+numpy = "*"
+pyarrow = "*"
+matplotlib = "*"
+jupyter = "*"
+notebook = "*"
+ipykernel = "*"
+ipy = "*"
+pandoc = "*"
+nbconvert = "*"
+joblib = "*"
+torch = "*"
+torchvision = "*"
+torchaudio = "*"
+seaborn = "*"
+scikit-survival = "*"
+imbalanced-learn = "*"
+rpy2 = "*"
+scipy = "*"
+xgboost = "*"
+lifelines = "*"
+weightedstats = "*"
+sklearn-json = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
