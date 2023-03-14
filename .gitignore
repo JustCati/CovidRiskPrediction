@@ -4,6 +4,7 @@ notes.txt
 *.py
 !test*.r
 !test*.py
+*.json
 
 # General
 .DS_Store
