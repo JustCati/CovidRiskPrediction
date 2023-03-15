@@ -3,6 +3,7 @@ notes.txt
 *.csv
 *.py
 *.json
+*.pdf
 
 # General
 .DS_Store
